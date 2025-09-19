@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geikishin Builds</title>
+  <style>
+    :root{
+      --accent1:#f18f01; --accent2:#f12711; --bg:#0b1220; --card:#0f1724; --muted:#9fb3c8; --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Arial; margin:0; background:linear-gradient(180deg,#071026 0%, #061426 60%); color:#e6f4ff}
+    header{padding:22px 28px; display:flex; gap:18px; align-items:center}
+    .logo{display:flex; gap:12px; align-items:center}
+    .logo .icon{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:900}
+    .title h1{margin:0;font-size:20px}
+    .title p{margin:0;color:var(--muted);font-size:13px}
+
+    nav{display:flex; gap:14px; padding:0 28px 18px}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:8px}
+    nav a.active, nav a:hover{background:var(--glass); color:#fff}
+
+    .container{display:grid; grid-template-columns:320px 1fr 360px; gap:18px; padding:0 28px 28px}
+
+    /* left column: filters + tierlist summary */
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.03)}
+    .search{display:flex; gap:8px}
+    .search input{flex:1;padding:8px;border-radius:8px;border:0;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    .tier-summary{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+    .tier-badge{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px}
+    .tier-badge.s{background:linear-gradient(90deg,#ffd16633,#ffd16622);color:#fff}
+    .tier-badge.a{background:linear-gradient(90deg,#89e6ff22,#5bd6ff18)}
+
+    /* center: characters grid */
+    .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; padding:12px; border:1px solid rgba(255,255,255,0.03);}
+    .card .thumb{height:120px;border-radius:8px; background:#0b1220; display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .card img{width:100%;height:100%;object-fit:cover}
+    .card h4{margin:8px 0 4px}
+    .roles{display:flex;gap:6px}
+    .role-pill{padding:6px 8px;border-radius:999px;font-size:12px;background:rgba(255,255,255,0.02)}
+    .card .build{margin-top:8px;font-size:13px;color:var(--muted)}
+
+    /* right: detail panel */
+    .detail{position:sticky; top:24px}
+    .detail .hero{display:flex;gap:12px;align-items:center}
+    .detail img{width:120px;height:120px;border-radius:12px;object-fit:cover}
+    .detail h3{margin:0}
+    .abilities{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+    .ability{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;font-size:13px}
+
+    footer{padding:18px;text-align:center;color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:1100px){ .container{grid-template-columns:1fr} .detail{order:3} nav{overflow:auto} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="icon">DB</div></div>
+    <div class="title"><h1>Geikishin Builds</h1><p>Builds, tierlists y guías comunitarias</p></div>
+  </header>
+  <nav>
+    <a href="#inicio" class="active">Inicio</a>
+    <a href="#personajes">Personajes</a>
+    <a href="#tierlist">Tier List</a>
+    <a href="#guias">Guías</a>
+  </nav>
+
+  <div class="container">
+    <div class="panel">
+      <div style="font-weight:800">Buscar personaje</div>
+      <div class="search" style="margin-top:8px">
+        <input id="search" placeholder="Escribe nombre...">
+      </div>
+
+      <div class="tier-summary" id="tierSummary">
+        <!-- JS fills tier summary -->
+      </div>
+
+      <div style="margin-top:12px;font-size:13px;color:var(--muted)">Fuentes agregadas: Destructoid, PocketGamer, LDPlayer, GamePressure, TRLST.</div>
+    </div>
+
+    <div>
+      <section style="margin-bottom:12px">
+        <h2 style="margin:0 0 8px">Personajes</h2>
+        <div class="grid" id="grid"></div>
+      </section>
+
+      <section style="margin-top:18px">
+        <h2 style="margin:0 0 8px">Tier agregado (resumen)</h2>
+        <div id="aggList"></div>
+      </section>
+    </div>
+
+    <aside class="panel detail">
+      <div id="detailEmpty">
+        <div style="font-weight:800">Selecciona un personaje</div>
+        <div style="color:var(--muted);margin-top:6px">Haz clic en cualquier tarjeta para ver la build destacada y la lista de fuentes que la recomiendan.</div>
+      </div>
+      <div id="detail" style="display:none">
+        <div class="hero"><img id="dimg"><div><h3 id="dname"></h3><div id="drole" class="role-pill"></div></div></div>
+        <div class="abilities" id="dabilities"></div>
+        <div style="margin-top:10px"><strong>Build destacada</strong><div id="dbuild" style="margin-top:6px;color:var(--muted)"></div></div>
+        <div style="margin-top:10px;color:var(--muted)"><strong>Fuentes que lo recomiendan:</strong><ul id="dsources"></ul></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Geikishin Builds • Datos agregados automáticamente desde artículos y guías públicas.</footer>
+
+<script>
+// ===== Datos agregados (resumen de múltiples fuentes).
+// Nota: estas listas fueron compiladas desde sitios públicos (Destructoid, PocketGamer, LDPlayer, GamePressure y TRLST).
+const aggregated = {
+  S: ['Super Saiyan Goku','Super Saiyan Vegeta','Krillin','Super Saiyan Kale (Berserk)','Cooler (Final Form)','Zamasu','Android 17','Super Uub'],
+  A: ['Android 18','Piccolo','Hit','Super Saiyan Trunks (Teen)','Gamma 1','Gamma 2','Majin Buu (Good)'],
+  B: ['Frieza (First Form)','Full Power Bojack','Son Gohan (Kid)','Cell (Perfect Form)']
+};
+
+// A small dataset of characters with placeholder images (you must download icons and place them in an /images folder)
+const characters = [
+  {name:'Super Saiyan Goku',role:'Damage',img:'images/goku.jpg',build:'Kamehameha Boost · Dragon Fist Gloves · Spirit Bomb Core',sources:['Destructoid','PocketGamer','GamePressure']},
+  {name:'Super Saiyan Vegeta',role:'Tank',img:'images/vegeta.jpg',build:'Galick Gun Amplifier · Prince’s Armor',sources:['Destructoid','LDPlayer','TRLST']},
+  {name:'Krillin',role:'Technical',img:'images/krillin.jpg',build:'Solar Flare Module · Destructible Orb',sources:['PocketGamer','TRLST']},
+  {name:'Super Saiyan Kale (Berserk)',role:'Damage',img:'images/kale.jpg',build:'Berserk Gauntlets · Rage Core',sources:['Destructoid','GamePressure']},
+  {name:'Cooler (Final Form)',role:'Damage',img:'images/cooler.jpg',build:'Final Form Reactor · Ice Edge',sources:['TRlst','LDPlayer']},
+  {name:'Android 17',role:'Technical',img:'images/android17.jpg',build:'Energy Barrier · Endless Ammo',sources:['PocketGamer','TRlst']},
+  {name:'Android 18',role:'Damage',img:'images/android18.jpg',build:'Rapid Module · Precision Lens',sources:['LDPlayer','GamePressure']},
+  {name:'Piccolo',role:'Support',img:'images/piccolo.jpg',build:'Regeneration Cloak · Stretching Arm Bands',sources:['GamePressure','LDPlayer']},
+  {name:'Hit',role:'Damage',img:'images/hit.jpg',build:'Time Skip Enhancer · Precision Focus',sources:['PocketGamer']},
+  {name:'Son Gohan (Kid)',role:'Damage',img:'images/gohan.jpg',build:'Burst Module · Scholar Band',sources:['GamePressure']}
+];
+
+// Render grid
+const grid = document.getElementById('grid');
+characters.forEach(c=>{
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = `<div class='thumb'><img src='${c.img}' alt='${c.name}' onerror="this.style.filter='grayscale(1)';this.style.objectFit='cover';this.style.background='#222'"></div><h4>${c.name}</h4><div class='roles'><div class='role-pill'>${c.role}</div></div><div class='build'>${c.build}</div>`;
+  card.addEventListener('click', ()=> showDetail(c));
+  grid.appendChild(card);
+});
+
+// Render aggregated tier list
+const aggList = document.getElementById('aggList');
+for(const t of ['S','A','B']){
+  const wrap = document.createElement('div'); wrap.style.marginBottom='8px'; wrap.innerHTML = `<div style='font-weight:800;margin-bottom:6px'>${t}-Tier</div><div style='display:flex;gap:8px;flex-wrap:wrap'>${aggregated[t].map(x=>`<div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px">${x}</div>`).join('')}</div>`;
+  aggList.appendChild(wrap);
+}
+
+// tier summary badges
+const ts = document.getElementById('tierSummary');
+['S','A','B'].forEach(t=>{
+  const el = document.createElement('div'); el.className='tier-badge '+(t.toLowerCase()); el.innerHTML = `<div style='font-weight:800'>${t}-Tier</div><div style='color:var(--muted);margin-left:auto'>${aggregated[t].slice(0,3).join(' · ')}</div>`; ts.appendChild(el);
+});
+
+// search
+document.getElementById('search').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase(); Array.from(grid.children).forEach(card=>{ const name = card.querySelector('h4').textContent.toLowerCase(); card.style.display = name.includes(q)?'block':'none'; })
+});
+
+function showDetail(c){
+  document.getElementById('detailEmpty').style.display='none';
+  const d = document.getElementById('detail'); d.style.display='block';
+  document.getElementById('dimg').src=c.img; document.getElementById('dname').textContent=c.name; document.getElementById('drole').textContent=c.role;
+  document.getElementById('dbuild').textContent = c.build;
+  const abi = document.getElementById('dabilities'); abi.innerHTML = '';
+  c.sources.forEach(s=>{ const li = document.createElement('li'); li.textContent = s; document.getElementById('dsources').appendChild(li); });
+}
+</script>
+</body>
+</html>
